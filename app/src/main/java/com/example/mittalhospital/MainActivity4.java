@@ -5,10 +5,13 @@ import static com.example.mittalhospital.R.id.spinner3;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -27,11 +30,13 @@ public class MainActivity4 extends AppCompatActivity  {
 
     EditText Dname;
 
-    Button bt;
+    Button bt, vw;
     EditText dateformat;
     int year;
     int month;
     int day;
+
+    DBappointment DB;
 
     Spinner spinner;
     Spinner spinner3;
@@ -44,6 +49,7 @@ public class MainActivity4 extends AppCompatActivity  {
         ID = findViewById(R.id.et);
         Dname = findViewById(R.id.et3);
         bt = findViewById(R.id.button4);
+        vw = findViewById(R.id.viewbtm);
 
         Calendar calendar = Calendar.getInstance();
         dateformat = findViewById(R.id.dobformat);
@@ -87,28 +93,82 @@ public class MainActivity4 extends AppCompatActivity  {
             }
         });
 
+        DB = new DBappointment(this);
         bt.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(View v) {
-                String patientname = name.getText().toString();
-                String patientid = ID.getText().toString();
-                String doctorname = Dname.getText().toString();
+                String Patientname = name.getText().toString();
+                String PatientID = ID.getText().toString();
+                String Doctorname = Dname.getText().toString();
                 String date = dateformat.getText().toString();
-                String spin2 = spinner3.getTransitionName();
 
 
 
-                Intent intent = new Intent(MainActivity4.this, appointmentappr.class);
-                intent.putExtra("keyname11", patientname);
-                intent.putExtra("keyname12", patientid);
-                intent.putExtra("keyname13", doctorname);
-                intent.putExtra("keyname14", date);
-                intent.putExtra("keyname15", spin2);
-                startActivity(intent);
+                Boolean savedata = DB.insertpatientdata(Patientname, PatientID, Doctorname, date);
+                if (TextUtils.isEmpty(Patientname) || TextUtils.isEmpty(PatientID) || TextUtils.isEmpty(Doctorname) || TextUtils.isEmpty(date) ) {
+                    Toast.makeText(MainActivity4.this, "Add name", Toast.LENGTH_SHORT).show();
+                    return;
+                } else {
+                    if (savedata == true) {
+                        Toast.makeText(MainActivity4.this, "Save user data", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity4.this, "Exists user Saved", Toast.LENGTH_SHORT).show();
+                    }
+                }
 
             }
+
+
         });
+
+        vw.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Cursor WL = DB.getdata();
+                if(WL.getCount()==0){
+                    Toast.makeText(MainActivity4.this, "User data not exists", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                StringBuffer buffer = new StringBuffer();
+                while (WL.moveToNext()) {
+                    buffer.append("Patient Name: " +WL.getString(0)+"\n");
+                    buffer.append("Patient ID: " +WL.getString(1)+"\n\n");
+                    buffer.append("Doctor's Name: " +WL.getString(2)+"\n\n\n");
+                    buffer.append("Department: " +"Cancer"+"\n\n\n\n");
+                    buffer.append("Date of Appointment: " +WL.getString(3)+"\n\n\n\n\n");
+
+
+                }
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity4.this);
+                builder.setCancelable(true);
+                builder.setTitle("Patient Appointment");
+                builder.setMessage(buffer.toString());
+                builder.show();            }
+        });
+
+//        bt.setOnClickListener(new View.OnClickListener() {
+//            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+//            @Override
+//            public void onClick(View v) {
+//                String patientname = name.getText().toString();
+//                String patientid = ID.getText().toString();
+//                String doctorname = Dname.getText().toString();
+//                String date = dateformat.getText().toString();
+//                String spin2 = spinner3.getTransitionName();
+//
+//
+//
+////                Intent intent = new Intent(MainActivity4.this, appointmentappr.class);
+////                intent.putExtra("keyname11", patientname);
+////                intent.putExtra("keyname12", patientid);
+////                intent.putExtra("keyname13", doctorname);
+////                intent.putExtra("keyname14", date);
+////                intent.putExtra("keyname15", spin2);
+////                startActivity(intent);
+//
+//            }
+//        });
 
     }
 

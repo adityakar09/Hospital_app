@@ -3,10 +3,13 @@ package com.example.mittalhospital;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -25,14 +28,16 @@ public class MainActivity3 extends AppCompatActivity  {
     EditText phone;
     EditText address;
 
-    Button bt;
+    Button bt, view, update, delete;
     EditText dateformat;
     int year;
     int month;
     int day;
 
-    Spinner spinner;
-    Spinner spinner2;
+//    Spinner spinner;
+//    Spinner spinner2;
+
+    DBpatient DB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +48,10 @@ public class MainActivity3 extends AppCompatActivity  {
         phone = findViewById(R.id.et2);
         address = findViewById(R.id.et3);
         bt = findViewById(R.id.button4);
+//        update = findViewById(R.id.button9);
+//        delete = findViewById(R.id.button10);
+        view = findViewById(R.id.button8);
+
 
         Calendar calendar = Calendar.getInstance();
         dateformat = findViewById(R.id.dobformat);
@@ -59,7 +68,7 @@ public class MainActivity3 extends AppCompatActivity  {
                         dateformat.setText(SimpleDateFormat.getDateInstance().format(calendar.getTime()));
 
                     }
-                },year, month, day);
+                }, year, month, day);
                 datePickerDialog.show();
 
 
@@ -89,32 +98,63 @@ public class MainActivity3 extends AppCompatActivity  {
             }
         });
 
+
+        DB = new DBpatient(this);
         bt.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(View v) {
                 String patientname = name.getText().toString();
                 String patientage = age.getText().toString();
+                String date = dateformat.getText().toString();
                 String phoneno = phone.getText().toString();
                 String patientaddress = address.getText().toString();
-                String date = dateformat.getText().toString();
-                String spin = spinner.getTransitionName();
-                String spin2 = spinner2.getTransitionName();
 
 
-
-                Intent intent = new Intent(MainActivity3.this, MainActivity5.class);
-                intent.putExtra("keyname", patientname);
-                intent.putExtra("keyname2", patientage);
-                intent.putExtra("keyname3", phoneno);
-                intent.putExtra("keyname4", patientaddress);
-                intent.putExtra("keyname5", date);
-                intent.putExtra("keyname6", spin);
-                intent.putExtra("keyname7", spin2);
-                startActivity(intent);
+                Boolean savedata = DB.insertuserdata(patientname, patientage, phoneno, patientaddress, date);
+                if (TextUtils.isEmpty(patientname) || TextUtils.isEmpty(patientage) || TextUtils.isEmpty(phoneno) || TextUtils.isEmpty(patientaddress) || TextUtils.isEmpty(date)) {
+                    Toast.makeText(MainActivity3.this, "Add name", Toast.LENGTH_SHORT).show();
+                    return;
+                } else {
+                    if (savedata == true) {
+                        Toast.makeText(MainActivity3.this, "Save user data", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity3.this, "Exists user Saved", Toast.LENGTH_SHORT).show();
+                    }
+                }
 
             }
+
+
         });
+
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               Cursor WL = DB.getdata();
+               if(WL.getCount()==0){
+                   Toast.makeText(MainActivity3.this, "User data not exists", Toast.LENGTH_SHORT).show();
+                   return;
+               }
+               StringBuffer buffer = new StringBuffer();
+               while (WL.moveToNext()) {
+                   buffer.append("Name: " +WL.getString(0)+"\n");
+                   buffer.append("Age: " +WL.getString(1)+"\n\n");
+                   buffer.append("Gender: " +"Male"+"\n\n\n");
+                   buffer.append("Date: " +WL.getString(2)+"\n\n\n\n");
+                   buffer.append("Disease Type: " +"Cancer"+"\n\n\n\n\n");
+                   buffer.append("Phone: " +WL.getString(3)+"\n\n\n\n\n\n");
+                   buffer.append("Address: " +WL.getString(4)+"\n\n\n\n\n\n\n");
+                   buffer.append("Medical Claim: " +"Yes"+"\n\n\n\n\n\n\n\n");
+
+               }
+
+               AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity3.this);
+               builder.setCancelable(true);
+               builder.setTitle("Patient Data");
+               builder.setMessage(buffer.toString());
+               builder.show();            }
+        });
+
 
     }
 
